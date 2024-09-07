@@ -15,4 +15,5 @@
 
 int create_server_socket();
 void bind_and_listen(int server_fd, struct sockaddr_in* address);
+int handle_new_connection(int server_fd, struct sockaddr_in* address, int *client_socket, int addrlen);
 #endif
