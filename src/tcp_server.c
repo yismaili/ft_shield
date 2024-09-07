@@ -55,23 +55,6 @@ int handle_new_connection(int server_fd, struct sockaddr_in* address, int *clien
     return new_socket;    
 }
 
-void execute_command(const char* command, int client_socket) {
-    char buffer[BUFFER_SIZE];
-    FILE* fp;
-
-    fp = popen(command, "r");
-    if (fp == NULL) {
-        perror("Failed to run command");
-        send(client_socket, "Error executing command\n", 25, 0);
-        return;
-    }
-    while (fgets(buffer, sizeof(buffer), fp) != NULL) {
-        send(client_socket, buffer, strlen(buffer), 0);
-    }
-    pclose(fp);
-}
-
-
 void handle_client_data(int socket_id, char *buffer, struct sockaddr_in* address, int *client_socket, int addrlen)
 {
     int valread;
@@ -91,6 +74,7 @@ void handle_client_data(int socket_id, char *buffer, struct sockaddr_in* address
 int main(void)
 {
     int server_fd;
+    int new_socket;
     int client_socket[MAX_CLIENTS];
     int max_sd;
     int socket_id;
@@ -132,9 +116,19 @@ int main(void)
         if ((activity < 0) && (errno != EINTR))
             perror("select error");
 
-        // New connection handling
-        if (FD_ISSET(server_fd, &readfds))
-            handle_new_connection(server_fd, &addr, client_socket, addrlen);
+        if (FD_ISSET(server_fd, &readfds)) {
+            new_socket = handle_new_connection(server_fd, &addr, client_socket, addrlen);
+            // Authenticate the client before proceeding
+            if (!authenticate_client(new_socket)) {
+                // If authentication fails, remove the socket from the list
+                for (int i = 0; i < MAX_CLIENTS; i++) {
+                    if (client_socket[i] == new_socket) {
+                        client_socket[i] = 0;
+                        break;
+                    }
+                }
+            }
+        }
 
         // Existing connection handling
         for (i = 0; i < MAX_CLIENTS; i++)
