@@ -55,7 +55,7 @@ int handle_new_connection(int server_fd, struct sockaddr_in* address, int *clien
     return new_socket;    
 }
 
-void handle_client_data(int socket_id, char *buffer, struct sockaddr_in* address, int *client_socket, int addrlen)
+void handle_client_data(int socket_id, char *buffer, struct sockaddr_in* address, int addrlen)
 {
     int valread;
 
@@ -135,7 +135,7 @@ int main(void)
         {
             socket_id = client_socket[i];
             if (FD_ISSET(socket_id, &readfds))
-                 handle_client_data(socket_id, buffer, &addr, client_socket, addrlen);
+                 handle_client_data(socket_id, buffer, &addr, addrlen);
         }
     }
 
