@@ -67,6 +67,8 @@ void handle_client_data(int socket_id, char *buffer, struct sockaddr_in* address
     } 
     else {
         buffer[valread] = '\0';
+        if (buffer[valread - 1] == '\n')
+            buffer[valread - 1] = '\0';
          execute_command(buffer, socket_id);
     }
 }

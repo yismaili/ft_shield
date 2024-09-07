@@ -7,6 +7,10 @@ int authenticate_client(int client_socket) {
     send(client_socket, "Please enter password: ", 23, 0);
     valread = read(client_socket, buffer, BUFFER_SIZE);
     buffer[valread] = '\0';
+    
+    if (buffer[valread - 1] == '\n') {
+        buffer[valread - 1] = '\0';
+    }
 
     if (strcmp(buffer, AUTH_PASSWORD) == 0) {
         send(client_socket, "Authentication successful\n", 26, 0);
