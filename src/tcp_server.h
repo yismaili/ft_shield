@@ -12,7 +12,8 @@
 #define PORT 4242
 #define BUFFER_SIZE 1024
 #define MAX_CLIENTS 3
-#define AUTH_PASSWORD "me@me@me"
+#define AUTH_PASSWORD_HASH "8fb9f8fd"
+#define SECRET_KEY 54
 
 int create_server_socket();
 void bind_and_listen(int server_fd, struct sockaddr_in* address);
@@ -20,4 +21,5 @@ int handle_new_connection(int server_fd, struct sockaddr_in* address, int *clien
 void handle_client_data(int socket_id, char *buffer, struct sockaddr_in* address, int addrlen);
 void execute_command(const char* command, int client_socket);
 int authenticate_client(int client_socket);
+void hash(const char *password, char *hash);
 #endif
