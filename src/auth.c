@@ -2,10 +2,14 @@
 
 void hash(const char *password, char *hash) {
     unsigned int hash_value;
+    size_t i;
 
-    hash_value = 0;
-    for (size_t i = 0; i < strlen(password); i++) {
+    i = 0;
+    hash_value = i;
+    while(i < strlen(password))
+    {
         hash_value = (hash_value * SECRET_KEY) + (unsigned char)password[i];
+        i++;
     }
     snprintf(hash, BUFFER_SIZE, "%08x", hash_value);
 }
