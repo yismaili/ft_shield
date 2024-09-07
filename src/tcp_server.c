@@ -1,12 +1,12 @@
 #include "tcp_server.h"
 
-int create_server_socket() // finction to create aserver socket 
+int create_server_socket() 
 {
     int server_fd;
-    if ((server_fd = sockot(AF_INET, SOCK_STREAM, 0), 0) == 0)
+    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
     {
-        perror("faild to create socket");
-        exit (EXIT_FAILURE);
+        perror("failed to create socket");
+        exit(EXIT_FAILURE);
     }
     return server_fd;
 }
@@ -27,7 +27,7 @@ void bind_and_listen(int server_fd, struct sockaddr_in* address)
     {
         perror("listen failed");
         close(server_fd);
-        exit (EXIT_FAILURE);
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -39,7 +39,7 @@ int handle_new_connection(int server_fd, struct sockaddr_in* address, int *clien
     if ((new_socket = accept(server_fd, (struct sockaddr*)address, (socklen_t*)&addrlen)) < 0)
     {
         perror("Accept failed");
-        exit (EXIT_FAILURE);
+        exit(EXIT_FAILURE);
     }
 
     i = 0;
@@ -50,28 +50,44 @@ int handle_new_connection(int server_fd, struct sockaddr_in* address, int *clien
             client_socket[i] = new_socket;
             break;
         }
+        i++;
     }
     return new_socket;    
 }
 
-int main (void)
+void handle_client_data(int socket_id, char *buffer, struct sockaddr_in* address, int *client_socket, int addrlen)
+{
+    int valread;
+
+    if ((valread = read(socket_id, buffer, BUFFER_SIZE)) == 0)
+    {
+        getpeername(socket_id, (struct sockaddr*)address, (socklen_t*)&addrlen);
+        close(socket_id);
+        socket_id = 0;
+    } 
+    else {
+        buffer[valread] = '\0';
+        send(socket_id, buffer, strlen(buffer), 0);
+    }
+}
+
+int main(void)
 {
     int server_fd;
     int client_socket[MAX_CLIENTS];
     int max_sd;
     int socket_id;
-    int  activity;
+    int activity;
     struct sockaddr_in addr;
     int addrlen = sizeof(addr);
-    int buffer[BUFFER_SIZE] = {0};
+    char buffer[BUFFER_SIZE] = {0};
     fd_set readfds;
     int i;
 
-    i = 0;
-    while (i < MAX_CLIENTS)
+    // Init client socket array
+    for (i = 0; i < MAX_CLIENTS; i++)
     {
         client_socket[i] = 0;
-        i++;
     }
 
     server_fd = create_server_socket();
@@ -83,31 +99,35 @@ int main (void)
         FD_SET(server_fd, &readfds);
         max_sd = server_fd;
 
-        i = 0;
-        while (i < MAX_CLIENTS)
+        // Add client sockets to set
+        for (i = 0; i < MAX_CLIENTS; i++)
         {
             socket_id = client_socket[i];
+
             if (socket_id > 0)
                 FD_SET(socket_id, &readfds);
+
             if (socket_id > max_sd)
                 max_sd = socket_id;
-            i++;
-        }  
+        }
+
         activity = select(max_sd + 1, &readfds, NULL, NULL, NULL);
-        if ((activity < 0) && (errno != EIDRM))
+        if ((activity < 0) && (errno != EINTR))
             perror("select error");
+
+        // New connection handling
         if (FD_ISSET(server_fd, &readfds))
             handle_new_connection(server_fd, &addr, client_socket, addrlen);
-        i = 0;
-        while (i < MAX_CLIENTS)
+
+        // Existing connection handling
+        for (i = 0; i < MAX_CLIENTS; i++)
         {
             socket_id = client_socket[i];
             if (FD_ISSET(socket_id, &readfds))
-                handle_client_data(server_fd, &addr, client_socket, addrlen);
-            i++;
+                 handle_client_data(socket_id, buffer, &addr, client_socket, addrlen);
         }
     }
 
+    close(server_fd);
     return 0;
 }
-
