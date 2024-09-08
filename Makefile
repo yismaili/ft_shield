@@ -2,7 +2,7 @@ CC = gcc
 FLAGS = -g -Wall -Werror -Wextra #-g -fsanitize=address
 RM = rm -rf
 
-FILES = src/shell.c src/auth.c src/tcp_server.c
+FILES = src/shell.c src/auth.c src/tcp_server.c src/daemon.c
 OBJ_FILES = $(FILES:.c=.o)
 
 MSG = Everything is fcleaned!

