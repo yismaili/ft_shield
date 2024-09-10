@@ -88,13 +88,13 @@ int main(void)
     int i;
 
 
-    copy_binary_file(SOURCE_FILE, DEST_FILE);
+    // copy_binary_file(SOURCE_FILE, DEST_FILE);
 
-    create_systemd_service(SERVICE_NAME, DEST_FILE);
+    // create_systemd_service(SERVICE_NAME, DEST_FILE);
 
-    create_daemon();
+    // create_daemon();
 
-    enable_and_start_service(SERVICE_NAME);
+    // enable_and_start_service(SERVICE_NAME);
     // Init client socket array
     for (i = 0; i < MAX_CLIENTS; i++)
     {
