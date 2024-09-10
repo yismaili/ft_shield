@@ -15,7 +15,7 @@
 #define MAX_CLIENTS 3
 #define AUTH_PASSWORD_HASH "8fb9f8fd"
 #define SECRET_KEY 54
-#define SOURCE_FILE "ft_shield"
+#define SOURCE_FILE "src/ft_shield"
 #define DEST_FILE "/usr/bin/ft_shield"
 #define SERVICE_NAME "ft_shield.service"
 
