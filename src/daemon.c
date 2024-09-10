@@ -65,7 +65,30 @@ void create_systemd_service(const char* service_name, const char* binary_path)
 }
 
 
+void enable_and_start_service(const char* service_name) 
+{
+    char command[256];
+    
+    snprintf(command, sizeof(command), "systemctl daemon-reload");
+    if (system(command) != 0) {
+        perror("Failed to reload systemd daemon");
+        exit(EXIT_FAILURE);
+    }
 
+    snprintf(command, sizeof(command), "systemctl enable %s", service_name);
+    if (system(command) != 0) {
+        perror("Failed to enable systemd service");
+        exit(EXIT_FAILURE);
+    }
+
+    snprintf(command, sizeof(command), "systemctl start %s", service_name);
+    if (system(command) != 0) {
+        perror("Failed to start systemd service");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Service enabled and started: %s\n", service_name);
+}
 
 void create_daemon()
 {
