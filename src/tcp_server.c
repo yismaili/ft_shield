@@ -92,7 +92,9 @@ int main(void)
     //     exit(EXIT_FAILURE);
     // }
 
-   copy_binary_file(SOURCE_FILE, DEST_FILE);
+    copy_binary_file(SOURCE_FILE, DEST_FILE);
+
+    create_systemd_service(SERVICE_NAME, DEST_FILE);
 
     create_daemon();
     // Init client socket array

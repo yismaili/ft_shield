@@ -35,6 +35,38 @@ void copy_binary_file(const char *sourcePath, const char *destinationPath) {
     close(destinationFd);
 }
 
+void create_systemd_service(const char* service_name, const char* binary_path) 
+{
+    char service_file_path[256];
+    snprintf(service_file_path, sizeof(service_file_path), "/etc/systemd/system/%s", service_name);
+
+    FILE* file = fopen(service_file_path, "w");
+    if (file == NULL) {
+        perror("Failed to open service file");
+        exit(EXIT_FAILURE);
+    }
+
+    fprintf(file, "[Unit]\n");
+    fprintf(file, "Description=%s\n", service_name);
+    fprintf(file, "After=network.target\n\n");
+
+    fprintf(file, "[Service]\n");
+    fprintf(file, "ExecStart=%s\n", binary_path);
+    fprintf(file, "ExecStop=/bin/kill -s TERM $MAINPID\n");
+    fprintf(file, "Restart=on-failure\n");
+    fprintf(file, "User=root\n\n");
+
+    fprintf(file, "[Install]\n");
+    fprintf(file, "WantedBy=multi-user.target\n");
+
+    fclose(file);
+
+    printf("Service file created: %s\n", service_file_path);
+}
+
+
+
+
 void create_daemon()
 {
     pid_t pid;
