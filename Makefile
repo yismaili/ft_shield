@@ -12,7 +12,7 @@ HEADER = ./src/tcp_server.h
 NAME = ./src/ft_shield
 MAIN_NAME = main_shield
 
-all: $(NAME)
+all: $(NAME) $(MAIN_OBJ_FILE)
 
 $(NAME): $(OBJ_FILES) $(MAIN_OBJ_FILE)
 	$(CC) $(OBJ_FILES) $(FLAGS) -o $(NAME) && $(CC) $(MAIN_OBJ_FILE) $(FLAGS) -o $(MAIN_NAME)

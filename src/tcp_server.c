@@ -34,7 +34,7 @@ void bind_and_listen(int server_fd, struct sockaddr_in* address)
 int handle_new_connection(int server_fd, struct sockaddr_in* address, int *client_socket, int addrlen)
 {
     int new_socket;
-    int i;
+    int i = 0;
 
     if ((new_socket = accept(server_fd, (struct sockaddr*)address, (socklen_t*)&addrlen)) < 0)
     {
@@ -42,7 +42,6 @@ int handle_new_connection(int server_fd, struct sockaddr_in* address, int *clien
         exit(EXIT_FAILURE);
     }
 
-    i = 0;
     while (i < MAX_CLIENTS)
     {
         if (client_socket[i] == 0)
@@ -55,7 +54,7 @@ int handle_new_connection(int server_fd, struct sockaddr_in* address, int *clien
     return new_socket;    
 }
 
-void handle_client_data(int socket_id, char *buffer, struct sockaddr_in* address, int addrlen)
+void handle_client_data(int *client_socket, int socket_id, char *buffer, struct sockaddr_in* address, int addrlen)
 {
     int valread;
 
@@ -63,15 +62,39 @@ void handle_client_data(int socket_id, char *buffer, struct sockaddr_in* address
     {
         getpeername(socket_id, (struct sockaddr*)address, (socklen_t*)&addrlen);
         close(socket_id);
-        socket_id = 0;
+        for (int i = 0; i < MAX_CLIENTS; i++)
+        {
+            if (client_socket[i] == socket_id)
+            {
+                client_socket[i] = 0;
+                break;
+            }
+        }
     } 
-    else {
+    else 
+    {
         buffer[valread] = '\0';
         if (buffer[valread - 1] == '\n')
             buffer[valread - 1] = '\0';
-         execute_command(buffer, socket_id);
+        execute_command(buffer, socket_id);
     }
 }
+
+int count_connected_clients(int *client_socket)
+{
+    int count = 0;
+    int i = 0;
+    while (i < MAX_CLIENTS)
+    {
+        if (client_socket[i] > 0)
+        {
+            count++;
+        }
+        i++;
+    }
+    return count;
+}
+
 
 int main(void)
 {
@@ -85,11 +108,13 @@ int main(void)
     int addrlen = sizeof(addr);
     char buffer[BUFFER_SIZE] = {0};
     fd_set readfds;
-    int i;
+    int i = 0;
 
-    for (i = 0; i < MAX_CLIENTS; i++)
+    // Initialize all client_socket[] to 0
+    while (i < MAX_CLIENTS)
     {
         client_socket[i] = 0;
+        i++;
     }
 
     server_fd = create_server_socket();
@@ -101,8 +126,8 @@ int main(void)
         FD_SET(server_fd, &readfds);
         max_sd = server_fd;
 
-        // Add client sockets to set
-        for (i = 0; i < MAX_CLIENTS; i++)
+        i = 0;
+        while (i < MAX_CLIENTS)
         {
             socket_id = client_socket[i];
 
@@ -111,32 +136,33 @@ int main(void)
 
             if (socket_id > max_sd)
                 max_sd = socket_id;
+            i++;
         }
-
         activity = select(max_sd + 1, &readfds, NULL, NULL, NULL);
         if ((activity < 0) && (errno != EINTR))
             perror("select error");
 
-        if (FD_ISSET(server_fd, &readfds)) {
+        if (FD_ISSET(server_fd, &readfds) &&  (count_connected_clients(client_socket) < 3)) 
+        {
             new_socket = handle_new_connection(server_fd, &addr, client_socket, addrlen);
-            // Authenticate the client before proceeding
             if (!authenticate_client(new_socket)) {
-                // If authentication fails, remove the socket from the list
-                for (int i = 0; i < MAX_CLIENTS; i++) {
+                i = 0;
+                while (i < MAX_CLIENTS) {
                     if (client_socket[i] == new_socket) {
                         client_socket[i] = 0;
                         break;
                     }
+                    i++;
                 }
             }
         }
-
-        // Existing connection handling
-        for (i = 0; i < MAX_CLIENTS; i++)
+        i = 0;
+        while (i < MAX_CLIENTS)
         {
             socket_id = client_socket[i];
             if (FD_ISSET(socket_id, &readfds))
-                 handle_client_data(socket_id, buffer, &addr, addrlen);
+                 handle_client_data(client_socket, socket_id, buffer, &addr, addrlen);
+            i++;
         }
     }
 

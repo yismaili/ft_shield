@@ -38,9 +38,11 @@ void copy_binary_file(const char *sourcePath, const char *destinationPath) {
 void create_systemd_service(const char* service_name, const char* binary_path) 
 {
     char service_file_path[256];
+    FILE* file;
+
     snprintf(service_file_path, sizeof(service_file_path), "/etc/systemd/system/%s", service_name);
 
-    FILE* file = fopen(service_file_path, "w");
+    file = fopen(service_file_path, "w");
     if (file == NULL) {
         perror("Failed to open service file");
         exit(EXIT_FAILURE);

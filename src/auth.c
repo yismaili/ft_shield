@@ -12,6 +12,7 @@ void hash(const char *password, char *hash) {
         i++;
     }
     snprintf(hash, BUFFER_SIZE, "%08x", hash_value);
+    printf("|%s\n|\n", hash);
 }
 
 int authenticate_client(int client_socket) {
