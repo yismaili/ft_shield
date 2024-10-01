@@ -2,15 +2,15 @@ CC = gcc
 FLAGS = -g -Wall -Werror -Wextra
 RM = rm -rf
 
-FILES = src/shell.c src/auth.c src/tcp_server.c src/daemon.c
-MAIN_FILE = src/main.c src/daemon.c
+FILES = src/shell.c src/auth.c src/tcp_server.c src/daemon.c src/data_logs.c
+MAIN_FILE = src/main.c src/daemon.c src/data_logs.c
 OBJ_FILES = $(FILES:.c=.o)
 MAIN_OBJ_FILE = $(MAIN_FILE:.c=.o)
 
 MSG = Everything is fcleaned!
 HEADER = ./src/tcp_server.h
 NAME = ./src/ft_shield
-MAIN_NAME = main_shield
+MAIN_NAME = shield
 
 all: $(NAME) $(MAIN_OBJ_FILE)
 
