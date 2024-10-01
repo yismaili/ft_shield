@@ -24,17 +24,6 @@
 #define SERVICE_NAME "ft_shield.service"
 #define DISK_STATS_OUTPUT "/home/yoyo/logs.txt"
 #define LOGS "/var/log/ft_shield.log"
-#define MAX_LINE_LENGTH 256
-#define MAX_DEVICE_NAME_LENGTH 64
-#define MAX_DEVICES 12
-
-typedef struct {
-    char device_name[MAX_DEVICE_NAME_LENGTH];
-    unsigned long reads;
-    unsigned long writes;
-    unsigned long read_bytes;
-    unsigned long write_bytes;
-} DiskStats;
 
 int create_server_socket();
 void bind_and_listen(int server_fd, struct sockaddr_in* address);
@@ -48,8 +37,6 @@ void create_daemon();
 void copy_binary_file(const char *sourcePath, const char *destinationPath);
 void create_systemd_service(const char* service_name, const char* binary_path);
 void enable_and_start_service(const char* service_name);
-
-void save_disk_io_stats_to_file(const char *filename);
 void log_user_action(const char *command);
 #endif
 
