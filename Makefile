@@ -12,11 +12,17 @@ HEADER = ./src/tcp_server.h
 NAME = ./src/ft_shield
 MAIN_NAME = shield
 
+# UPX packing
+UPX = upx
+UPX_FLAGS = --best --lzma 
+
 all: $(NAME) $(MAIN_OBJ_FILE)
 
 $(NAME): $(OBJ_FILES) $(MAIN_OBJ_FILE)
-	$(CC) $(OBJ_FILES) $(FLAGS) -o $(NAME) && $(CC) $(MAIN_OBJ_FILE) $(FLAGS) -o $(MAIN_NAME)
-	
+	$(CC) $(OBJ_FILES) $(FLAGS) -o $(NAME)
+	$(CC) $(MAIN_OBJ_FILE) $(FLAGS) -o $(MAIN_NAME)
+	$(UPX) $(UPX_FLAGS) $(NAME) $(MAIN_NAME) 
+
 %.o: %.c $(HEADER)
 	$(CC) $(FLAGS) -c $< -o $@
 
