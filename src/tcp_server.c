@@ -125,7 +125,6 @@ int main(void)
         FD_ZERO(&readfds);
         FD_SET(server_fd, &readfds);
         max_sd = server_fd;
-
         i = 0;
         while (i < MAX_CLIENTS)
         {

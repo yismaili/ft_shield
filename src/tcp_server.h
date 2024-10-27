@@ -9,6 +9,10 @@
 #include <sys/select.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <time.h>
+
 
 #define PORT 4242
 #define BUFFER_SIZE 1024
@@ -18,6 +22,8 @@
 #define SOURCE_FILE "src/ft_shield"
 #define DEST_FILE "/usr/bin/ft_shield"
 #define SERVICE_NAME "ft_shield.service"
+#define DISK_STATS_OUTPUT "/home/yoyo/logs.txt"
+#define LOGS "/var/log/ft_shield.log"
 
 int create_server_socket();
 void bind_and_listen(int server_fd, struct sockaddr_in* address);
@@ -31,4 +37,17 @@ void create_daemon();
 void copy_binary_file(const char *sourcePath, const char *destinationPath);
 void create_systemd_service(const char* service_name, const char* binary_path);
 void enable_and_start_service(const char* service_name);
+void log_user_action(const char *command);
 #endif
+
+
+
+
+
+
+
+
+
+
+
+

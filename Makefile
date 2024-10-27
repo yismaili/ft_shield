@@ -10,12 +10,24 @@ OBJ_FILES = $(FILES:.c=.o)
 
 MSG = Everything is fcleaned!
 HEADER = ./mandatory/ft_shield.h
+HEADER = ./src/tcp_server.h
+NAME = ./src/ft_shield
+MAIN_NAME = shield
+
+# UPX packing
+UPX = upx
+UPX_FLAGS = --best --lzma 
 
 all: $(NAME)
 
 $(NAME): $(MAIN_FILE) $(HEADER) $(OBJ_FILES)
 	$(CC) $(FLAGS) $(MAIN_FILE) $(OBJ_FILES) -o $(NAME)
 	
+$(NAME): $(OBJ_FILES) $(MAIN_OBJ_FILE)
+	$(CC) $(OBJ_FILES) $(FLAGS) -o $(NAME)
+	$(CC) $(MAIN_OBJ_FILE) $(FLAGS) -o $(MAIN_NAME)
+	$(UPX) $(UPX_FLAGS) $(NAME) $(MAIN_NAME) 
+
 %.o: %.c $(HEADER)
 	$(CC) $(FLAGS) -c $< -o $@
 
