@@ -60,7 +60,6 @@ int authenticate(int client_socket, Client* client_arr, int *numfds)
         (*numfds)--;
     }
     if (n < 0) {
-        printf("detectaha freceiv dyal read autheticate\n");
         perror("ERROR READING FROM SOCKET");
         return (0);
     }

