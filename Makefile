@@ -1,43 +1,65 @@
-NAME = ./mandatory/ft_shield
-
 CC = gcc
 FLAGS = -g -Wall -Werror -Wextra
 RM = rm -rf
+UPX = upx
+UPX_FLAGS = --best --lzma
 
-FILES = mandatory/service.c mandatory/daemon.c mandatory/authentication.c mandatory/hash.c mandatory/server.c mandatory/shell.c mandatory/quine.c
-MAIN_FILE = mandatory/main.c
-OBJ_FILES = $(FILES:.c=.o)
+# Mandatory part
+NAME = ./mandatory/ft_shield
+MANDATORY_HEADER = ./mandatory/ft_shield.h
+MANDATORY_FILES = mandatory/service.c \
+                 mandatory/daemon.c \
+                 mandatory/authentication.c \
+                 mandatory/hash.c \
+                 mandatory/server.c \
+                 mandatory/shell.c \
+                 mandatory/quine.c
+MANDATORY_MAIN = mandatory/main.c
+MANDATORY_OBJ = $(MANDATORY_FILES:.c=.o)
+
+# Bonus part
+BONUS_NAME = ./bonus/ft_shield_bonus
+BONUS_HEADER = ./bonus/ft_shield_bonus.h
+BONUS_FILES = bonus/log_user_action.c \
+             bonus/service.c \
+             bonus/daemon.c \
+             bonus/authentication.c \
+             bonus/hash.c \
+             bonus/server.c \
+             bonus/shell.c \
+             bonus/quine.c
+BONUS_MAIN = bonus/main_bonus.c
+BONUS_OBJ = $(BONUS_FILES:.c=.o)
+
 
 MSG = Everything is fcleaned!
-HEADER = ./mandatory/ft_shield.h
-HEADER = ./src/tcp_server.h
-NAME = ./src/ft_shield
-MAIN_NAME = shield
-
-# UPX packing
-UPX = upx
-UPX_FLAGS = --best --lzma 
 
 all: $(NAME)
 
-$(NAME): $(MAIN_FILE) $(HEADER) $(OBJ_FILES)
-	$(CC) $(FLAGS) $(MAIN_FILE) $(OBJ_FILES) -o $(NAME)
-	
-$(NAME): $(OBJ_FILES) $(MAIN_OBJ_FILE)
-	$(CC) $(OBJ_FILES) $(FLAGS) -o $(NAME)
-	$(CC) $(MAIN_OBJ_FILE) $(FLAGS) -o $(MAIN_NAME)
-	$(UPX) $(UPX_FLAGS) $(NAME) $(MAIN_NAME) 
 
-%.o: %.c $(HEADER)
+$(NAME): $(MANDATORY_OBJ) $(MANDATORY_MAIN)
+	$(CC) $(FLAGS) $(MANDATORY_MAIN) $(MANDATORY_OBJ) -o $(NAME)
+
+bonus: $(BONUS_NAME)
+
+$(BONUS_NAME): $(BONUS_OBJ) $(BONUS_MAIN)
+	$(CC) $(FLAGS) $(BONUS_MAIN) $(BONUS_OBJ) -o $(BONUS_NAME)
+	$(UPX) $(UPX_FLAGS) $(BONUS_NAME) 
+
+%.o: %.c
 	$(CC) $(FLAGS) -c $< -o $@
 
 clean:
-	$(RM) -f $(OBJ_FILES)
+	$(RM) $(MANDATORY_OBJ)
+	$(RM) $(BONUS_OBJ)
 
 fclean: clean
 	$(RM) $(NAME)
+	$(RM) $(BONUS_NAME)
 	@echo $(MSG)
 
 re: fclean all
 
-.PHONY:  all clean fclean re
+re_bonus: fclean bonus
+
+.PHONY: all bonus clean fclean re re_bonus
