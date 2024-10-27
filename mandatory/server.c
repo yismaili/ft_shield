@@ -40,10 +40,6 @@ void listen_socket(Server *server)
     }
 }
 
-void close_socket(int socket_fd)
-{
-    close(socket_fd);
-}
 
 void read_write_socket(Client* client_arr,  int sock, int *numfds)
 {
@@ -99,6 +95,7 @@ void accept_socket(Server *server)
                         exit(EXIT_FAILURE);
                     }
                     if (numfds > MAX_CLIENTS) {
+                        send(server->_new_socket_fd, "Server is full\n", 15, 0);
                         close(server->_new_socket_fd);
                     } else {
                         server->_fds[numfds].fd = server->_new_socket_fd;
@@ -119,6 +116,11 @@ void accept_socket(Server *server)
             }
         }
     }
+}
+
+void close_socket(int socket_fd)
+{
+    close(socket_fd);
 }
 
 void server() {
