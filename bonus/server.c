@@ -78,6 +78,7 @@ void accept_socket(Server *server)
     int client_length = sizeof(server->_cli_addr);
     server->_fds[0].fd = server->_socket_fd;
     server->_fds[0].events = POLLIN;
+    Client client_arr[MAX_CLIENTS];
 
     while (1) {
         int ret = poll(server->_fds, numfds, -1);

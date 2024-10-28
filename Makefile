@@ -4,7 +4,7 @@ RM = rm -rf
 UPX = upx
 UPX_FLAGS = --best --lzma
 
-# Mandatory part
+
 NAME = ./mandatory/ft_shield
 MANDATORY_HEADER = ./mandatory/ft_shield.h
 MANDATORY_FILES = mandatory/service.c \
@@ -17,9 +17,8 @@ MANDATORY_FILES = mandatory/service.c \
 MANDATORY_MAIN = mandatory/main.c
 MANDATORY_OBJ = $(MANDATORY_FILES:.c=.o)
 
-# Bonus part
-BONUS_NAME = ./bonus/ft_shield_bonus
-BONUS_HEADER = ./bonus/ft_shield_bonus.h
+BONUS_NAME = ./bonus/ft_shield
+BONUS_HEADER = ./bonus/ft_shield.h
 BONUS_FILES = bonus/log_user_action.c \
              bonus/service.c \
              bonus/daemon.c \
@@ -28,7 +27,7 @@ BONUS_FILES = bonus/log_user_action.c \
              bonus/server.c \
              bonus/shell.c \
              bonus/quine.c
-BONUS_MAIN = bonus/main_bonus.c
+BONUS_MAIN = bonus/main.c
 BONUS_OBJ = $(BONUS_FILES:.c=.o)
 
 
