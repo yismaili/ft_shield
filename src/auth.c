@@ -24,7 +24,6 @@ int authenticate_client(int client_socket) {
 
     if (valread <= 0) {
         send(client_socket, "Failed to read password. Disconnecting...\n", 42, 0);
-        close(client_socket);
         return 0;
     }
 
@@ -40,8 +39,6 @@ int authenticate_client(int client_socket) {
         send(client_socket, "Authentication successful\n", 26, 0);
         return 1;
     } else {
-        send(client_socket, "Authentication failed. Disconnecting...\n", 40, 0);
-        close(client_socket);
         return 0;
     }
 }

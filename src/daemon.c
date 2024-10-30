@@ -1,4 +1,7 @@
 #include "tcp_server.h"
+#include <signal.h>
+#include <sys/stat.h>
+#include <syslog.h>
 
 void copy_binary_file(const char *sourcePath, const char *destinationPath) {
     int sourceFd;
@@ -94,25 +97,31 @@ void enable_and_start_service(const char* service_name)
 
 void create_daemon()
 {
-    pid_t pid;
+   pid_t pid, sid;
 
     pid = fork();
+    if (pid < 0) {
+        exit(EXIT_FAILURE);
+    }
+    if (pid > 0) {
+        exit(EXIT_SUCCESS);
+    }
 
-    if (pid < 0)
-        exit (EXIT_FAILURE);
-    if (pid > 0)
-        exit (EXIT_SUCCESS);
-    if (setsid() < 0)
-        exit (EXIT_FAILURE);
-    
-    pid = fork();
-    if (pid < 0)
-        exit (EXIT_FAILURE);
-    if (pid > 0)
-        exit (EXIT_SUCCESS);
-    chdir("/");
+    umask(0);
+
+    sid = setsid();
+    if (sid < 0) {
+        exit(EXIT_FAILURE);
+    }
+
+    if ((chdir("/")) < 0) {
+        exit(EXIT_FAILURE);
+    }
+
     close(STDIN_FILENO);
     close(STDOUT_FILENO);
     close(STDERR_FILENO);
+
+    openlog("ft_shield", LOG_PID, LOG_DAEMON);
 }
 

