@@ -41,7 +41,7 @@ typedef struct {
     int socket_fd;
 } Client;
 
-// Client client_arr[MAX_CLIENTS];
+Client client_arr[MAX_CLIENTS];
 
 void quine();
 
