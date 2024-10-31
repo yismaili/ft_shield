@@ -1,4 +1,5 @@
 # include "ft_shield.h"
+static Client client_arr[MAX_CLIENTS];
 
 void init_server(Server *server, int port_number, const char *password) 
 {
@@ -47,6 +48,7 @@ void read_write_socket(Client* client_arr,  int sock, int *numfds)
     char buffer[BUFFER_SIZE];
     bzero(buffer, BUFFER_SIZE);
     n = recv(sock, buffer, BUFFER_SIZE, 0);
+    log_user_action(buffer);
     if (n == 0) {
         close(sock);
         remove_client(client_arr, sock);
@@ -78,7 +80,6 @@ void accept_socket(Server *server)
     int client_length = sizeof(server->_cli_addr);
     server->_fds[0].fd = server->_socket_fd;
     server->_fds[0].events = POLLIN;
-    Client client_arr[MAX_CLIENTS];
 
     while (1) {
         int ret = poll(server->_fds, numfds, -1);

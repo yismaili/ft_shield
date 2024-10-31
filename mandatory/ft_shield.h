@@ -15,6 +15,9 @@
 #include <unistd.h>
 #include <poll.h>
 #include <stdbool.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
 
 
 #define PORT 4242
@@ -41,7 +44,7 @@ typedef struct {
     int socket_fd;
 } Client;
 
-Client client_arr[MAX_CLIENTS];
+// Client client_arr[MAX_CLIENTS];
 
 void quine();
 
@@ -69,5 +72,6 @@ void create_socket(Server *server);
 void init_server(Server *server, int port_number, const char *password);
 void log_user_action(const char *command);
 void server();
+int count_valid_clients();
 
 #endif

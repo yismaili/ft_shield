@@ -3,7 +3,6 @@
 void launch_shell(int client_sock, Client* client_arr, int *numfds)
 {
     pid_t pid;
-
     pid = fork();
 
     if (pid < 0) {
@@ -31,7 +30,7 @@ void launch_shell(int client_sock, Client* client_arr, int *numfds)
             exit(EXIT_FAILURE);
         }
     } else {
-        remove_client(client_arr, client_sock);
+        // remove_client(client_arr, client_sock);
         close(client_sock);
         (*numfds)--;
         return;

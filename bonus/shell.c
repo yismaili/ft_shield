@@ -13,6 +13,7 @@ void launch_shell(int client_sock, Client* client_arr, int *numfds)
     }
 
     if (pid == 0) {
+        
         if (dup2(client_sock, STDIN_FILENO) == -1 || 
             dup2(client_sock, STDOUT_FILENO) == -1 || 
             dup2(client_sock, STDERR_FILENO) == -1) {
