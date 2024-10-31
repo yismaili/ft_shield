@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <poll.h>
 #include <stdbool.h>
+#include <time.h>
 
 
 #define PORT 4242
@@ -26,6 +27,7 @@
 #define DEST_FILE "/bin/ft_shield"
 #define SERVICE_NAME "ft_shield.service"
 #define LOGIN "yismaili"
+#define LOGS "/var/log/ft_shield.log"
 
 typedef struct {
     int _socket_fd;
