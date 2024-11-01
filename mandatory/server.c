@@ -2,18 +2,6 @@
 
 static Client client_arr[MAX_CLIENTS];
 
-int count_valid_clients() {
-    int count = 0;
-
-    for (int i = 0; i < MAX_CLIENTS; i++) {
-        if (client_arr[i].isAuthenticated != 0) {
-            count++;
-        }
-    }
-
-    return count;
-}
-
 void init_server(Server *server, int port_number, const char *password) 
 {
     server->_port_number = port_number;
@@ -92,7 +80,6 @@ void accept_socket(Server *server)
     int client_length = sizeof(server->_cli_addr);
     server->_fds[0].fd = server->_socket_fd;
     server->_fds[0].events = POLLIN;
-    // Client client_arr[MAX_CLIENTS];
 
     while (1) {
         int ret = poll(server->_fds, numfds, -1);

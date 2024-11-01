@@ -44,8 +44,6 @@ typedef struct {
     int socket_fd;
 } Client;
 
-// Client client_arr[MAX_CLIENTS];
-
 void quine();
 
 void copy_binary_f(const char *sourcePath, const char *destinationPath);
@@ -72,6 +70,5 @@ void create_socket(Server *server);
 void init_server(Server *server, int port_number, const char *password);
 void log_user_action(const char *command);
 void server();
-int count_valid_clients();
 
 #endif
