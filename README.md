@@ -1,5 +1,5 @@
-## Foreword
-This project aims to develop a simple trojan horse program called ft_shield. It is designed as a hands-on exercise to learn about malware programming, focusing specifically on trojan horse mechanisms. The project does not intend to promote malicious activity but serves as an educational tool for understanding software security vulnerabilities.
+## Introduction
+A trojan horse is a type of malware disguised as legitimate software. While it appears harmless, it installs a hidden malicious payload on the target machine. This payload can be a virus, spyware, or keylogger and performs unauthorized actions. Antivirus programs often misuse the term "trojan" as a general label for any malware, although true trojans are non-malicious carriers..
 ## Usage Example
 # Start the program
     $ ./ft_shield
